@@ -1,12 +1,12 @@
-import { sendSuccess, sendError } from '../utils/response.js';
-import Subject from '../models/SubjectModel.js';
+import { sendSuccess, sendError } from "../utils/response.js";
+import Subject from "../models/SubjectModel.js";
 
 export const createSubject = async (req, res) => {
   try {
     const { name, description, color } = req.body;
 
     if (!name) {
-      return sendError(res, 400, 'Subject name is required');
+      return sendError(res, 400, "Subject name is required");
     }
 
     const subject = await Subject.create({
@@ -16,7 +16,7 @@ export const createSubject = async (req, res) => {
       user: req.userId,
     });
 
-    return sendSuccess(res, 201, 'Subject created successfully', subject);
+    return sendSuccess(res, 201, "Subject created successfully", subject);
   } catch (error) {
     return sendError(res, 400, error.message);
   }
@@ -24,8 +24,12 @@ export const createSubject = async (req, res) => {
 
 export const getAllSubjects = async (req, res) => {
   try {
-    const subjects = await Subject.find({ user: req.userId }).populate('notes quizzes flashcards');
-    return sendSuccess(res, 200, 'Subjects fetched successfully', subjects);
+    const subjects = await Subject.find({ user: req.userId })
+      .populate("notes")
+      .populate("quizzes");
+    // .populate("flashcards");
+
+    return sendSuccess(res, 200, "Subjects fetched successfully", subjects);
   } catch (error) {
     return sendError(res, 400, error.message);
   }
@@ -33,11 +37,13 @@ export const getAllSubjects = async (req, res) => {
 
 export const getSubjectById = async (req, res) => {
   try {
-    const subject = await Subject.findById(req.params.id).populate('notes quizzes flashcards');
+    const subject = await Subject.findById(req.params.id).populate(
+      "notes quizzes flashcards"
+    );
     if (!subject) {
-      return sendError(res, 404, 'Subject not found');
+      return sendError(res, 404, "Subject not found");
     }
-    return sendSuccess(res, 200, 'Subject fetched successfully', subject);
+    return sendSuccess(res, 200, "Subject fetched successfully", subject);
   } catch (error) {
     return sendError(res, 400, error.message);
   }
@@ -50,9 +56,9 @@ export const updateSubject = async (req, res) => {
       runValidators: true,
     });
     if (!subject) {
-      return sendError(res, 404, 'Subject not found');
+      return sendError(res, 404, "Subject not found");
     }
-    return sendSuccess(res, 200, 'Subject updated successfully', subject);
+    return sendSuccess(res, 200, "Subject updated successfully", subject);
   } catch (error) {
     return sendError(res, 400, error.message);
   }
@@ -62,9 +68,9 @@ export const deleteSubject = async (req, res) => {
   try {
     const subject = await Subject.findByIdAndDelete(req.params.id);
     if (!subject) {
-      return sendError(res, 404, 'Subject not found');
+      return sendError(res, 404, "Subject not found");
     }
-    return sendSuccess(res, 200, 'Subject deleted successfully');
+    return sendSuccess(res, 200, "Subject deleted successfully");
   } catch (error) {
     return sendError(res, 400, error.message);
   }
@@ -73,26 +79,26 @@ export const deleteSubject = async (req, res) => {
 export const addResource = async (req, res) => {
   try {
     const { resourceId, resourceType } = req.body;
-    
+
     if (!resourceId || !resourceType) {
-      return sendError(res, 400, 'Resource ID and type are required');
+      return sendError(res, 400, "Resource ID and type are required");
     }
 
     const subject = await Subject.findById(req.params.id);
     if (!subject) {
-      return sendError(res, 404, 'Subject not found');
+      return sendError(res, 404, "Subject not found");
     }
 
-    if (resourceType === 'note') {
+    if (resourceType === "note") {
       subject.notes.push(resourceId);
-    } else if (resourceType === 'quiz') {
+    } else if (resourceType === "quiz") {
       subject.quizzes.push(resourceId);
-    } else if (resourceType === 'flashcard') {
+    } else if (resourceType === "flashcard") {
       subject.flashcards.push(resourceId);
     }
 
     await subject.save();
-    return sendSuccess(res, 200, 'Resource added successfully', subject);
+    return sendSuccess(res, 200, "Resource added successfully", subject);
   } catch (error) {
     return sendError(res, 400, error.message);
   }
