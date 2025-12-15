@@ -1,21 +1,21 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const quizSchema = new mongoose.Schema(
   {
     title: {
       type: String,
-      required: [true, 'Please provide quiz title'],
+      required: [true, "Please provide quiz title"],
       trim: true,
     },
     description: String,
     user: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: "User",
       required: true,
     },
     subject: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Subject',
+      ref: "Subject",
     },
     questions: [
       {
@@ -49,8 +49,18 @@ const quizSchema = new mongoose.Schema(
         completedAt: Date,
       },
     ],
+    isDeleted: { type: Boolean, default: false },
+    deletedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+    deletedAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );
 
-export default mongoose.model('Quiz', quizSchema);
+export default mongoose.model("Quiz", quizSchema);

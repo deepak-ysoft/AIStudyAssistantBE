@@ -1,6 +1,7 @@
+import "dotenv/config"; // 👈 MUST BE FIRST
+
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
 import { createServer } from "http";
 import connectDB from "./config/db.js";
 import setupSocketIO from "./socket/notification.js";
@@ -10,14 +11,12 @@ import notesRoutes from "./routes/notesRoutes.js";
 import aiRoutes from "./routes/aiRoutes.js";
 import subjectRoutes from "./routes/subjectRoutes.js";
 import quizRoutes from "./routes/quizRoutes.js";
+import flashcards from "./routes/flashcardRoutes.js";
 import reportRoutes from "./routes/reportRoutes.js";
-
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 const CORS_ORIGIN = process.env.CORS_ORIGIN || "http://localhost:5101";
-
 app.use(
   cors({
     origin: CORS_ORIGIN,
@@ -41,6 +40,7 @@ app.use("/notes", notesRoutes);
 app.use("/ai", aiRoutes);
 app.use("/subjects", subjectRoutes);
 app.use("/quizzes", quizRoutes);
+app.use("/flashcards", flashcards);
 app.use("/reports", reportRoutes);
 
 const httpServer = createServer(app);

@@ -1,16 +1,16 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const reportSchema = new mongoose.Schema(
   {
     user: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: "User",
       required: true,
     },
     reportType: {
       type: String,
-      enum: ['weekly', 'monthly', 'custom'],
-      default: 'weekly',
+      enum: ["weekly", "monthly", "custom"],
+      default: "weekly",
     },
     startDate: {
       type: Date,
@@ -48,8 +48,18 @@ const reportSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    isDeleted: { type: Boolean, default: false },
+    deletedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+    deletedAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );
 
-export default mongoose.model('Report', reportSchema);
+export default mongoose.model("Report", reportSchema);

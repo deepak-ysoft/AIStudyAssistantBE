@@ -1,10 +1,10 @@
-import User from '../models/UserModel.js';
-import { generateToken } from '../utils/token.js';
+import User from "../models/UserModel.js";
+import { generateToken } from "../utils/token.js";
 
 export const signup = async (name, email, password) => {
   const userExists = await User.findOne({ email });
   if (userExists) {
-    throw new Error('User with this email already exists');
+    throw new Error("User with this email already exists");
   }
 
   const user = await User.create({
@@ -14,7 +14,7 @@ export const signup = async (name, email, password) => {
   });
 
   const token = generateToken(user._id);
-  
+
   return {
     user: {
       id: user._id,
@@ -27,14 +27,16 @@ export const signup = async (name, email, password) => {
 };
 
 export const login = async (email, password) => {
-  const user = await User.findOne({ email }).select('+password');
+  const user = await User.findOne({ email, isDeleted: false }).select(
+    "+password"
+  );
   if (!user) {
-    throw new Error('Invalid email or password');
+    throw new Error("Invalid email or password");
   }
 
   const isPasswordMatch = await user.matchPassword(password);
   if (!isPasswordMatch) {
-    throw new Error('Invalid email or password');
+    throw new Error("Invalid email or password");
   }
 
   const token = generateToken(user._id);
@@ -51,9 +53,11 @@ export const login = async (email, password) => {
 };
 
 export const getProfile = async (userId) => {
-  const user = await User.findById(userId).populate('subjects');
+  const user = await User.findOne({ _id: userId, isDeleted: false }).populate(
+    "subjects"
+  );
   if (!user) {
-    throw new Error('User not found');
+    throw new Error("User not found");
   }
   return user;
 };
@@ -64,7 +68,7 @@ export const updateProfile = async (userId, updateData) => {
     runValidators: true,
   });
   if (!user) {
-    throw new Error('User not found');
+    throw new Error("User not found");
   }
   return user;
 };

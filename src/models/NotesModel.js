@@ -1,24 +1,24 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const noteSchema = new mongoose.Schema(
   {
     title: {
       type: String,
-      required: [true, 'Please provide note title'],
+      required: [true, "Please provide note title"],
       trim: true,
     },
     content: {
       type: String,
-      required: [true, 'Please provide note content'],
+      required: [true, "Please provide note content"],
     },
     user: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: "User",
       required: true,
     },
     subject: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Subject',
+      ref: "Subject",
     },
     filePath: {
       type: String,
@@ -26,8 +26,8 @@ const noteSchema = new mongoose.Schema(
     },
     fileType: {
       type: String,
-      enum: ['text', 'pdf'],
-      default: 'text',
+      enum: ["text", "pdf"],
+      default: "text",
     },
     summary: {
       type: String,
@@ -42,8 +42,18 @@ const noteSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    isDeleted: { type: Boolean, default: false },
+    deletedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+    deletedAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );
 
-export default mongoose.model('Note', noteSchema);
+export default mongoose.model("Note", noteSchema);

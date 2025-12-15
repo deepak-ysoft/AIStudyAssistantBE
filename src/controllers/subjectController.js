@@ -24,10 +24,10 @@ export const createSubject = async (req, res) => {
 
 export const getAllSubjects = async (req, res) => {
   try {
-    const subjects = await Subject.find({ user: req.userId })
+    const subjects = await Subject.find({ user: req.userId, isDeleted: false })
       .populate("notes")
-      .populate("quizzes");
-    // .populate("flashcards");
+      .populate("quizzes")
+      .populate("flashcards");
 
     return sendSuccess(res, 200, "Subjects fetched successfully", subjects);
   } catch (error) {
@@ -37,9 +37,10 @@ export const getAllSubjects = async (req, res) => {
 
 export const getSubjectById = async (req, res) => {
   try {
-    const subject = await Subject.findById(req.params.id).populate(
-      "notes quizzes flashcards"
-    );
+    const subject = await Subject.findOne({
+      _id: req.params.id,
+      isDeleted: false,
+    }).populate("notes quizzes flashcards");
     if (!subject) {
       return sendError(res, 404, "Subject not found");
     }
@@ -66,10 +67,17 @@ export const updateSubject = async (req, res) => {
 
 export const deleteSubject = async (req, res) => {
   try {
-    const subject = await Subject.findByIdAndDelete(req.params.id);
+    const subject = await Subject.findOne({
+      _id: req.params.id,
+      isDeleted: false,
+    });
     if (!subject) {
       return sendError(res, 404, "Subject not found");
     }
+    subject.isDeleted = true;
+    subject.deletedAt = new Date();
+    subject.deletedBy = req.userId;
+    await subject.save();
     return sendSuccess(res, 200, "Subject deleted successfully");
   } catch (error) {
     return sendError(res, 400, error.message);
@@ -84,7 +92,7 @@ export const addResource = async (req, res) => {
       return sendError(res, 400, "Resource ID and type are required");
     }
 
-    const subject = await Subject.findById(req.params.id);
+    const subject = await Subject.findOne({ _id: req.params.id, isDeleted: false });
     if (!subject) {
       return sendError(res, 404, "Subject not found");
     }

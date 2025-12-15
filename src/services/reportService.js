@@ -11,11 +11,13 @@ export const generateWeeklyReport = async (userId) => {
   const quizzes = await Quiz.find({
     'attempts.userId': userId,
     'attempts.completedAt': { $gte: startDate, $lte: endDate },
+    isDeleted: false,
   });
 
   const notes = await Note.find({
     user: userId,
     createdAt: { $gte: startDate, $lte: endDate },
+    isDeleted: false,
   });
 
   const totalStudyHours = calculateStudyHours(quizzes);
@@ -44,6 +46,7 @@ export const generateMonthlyReport = async (userId) => {
   const quizzes = await Quiz.find({
     'attempts.userId': userId,
     'attempts.completedAt': { $gte: startDate, $lte: endDate },
+    isDeleted: false,
   });
 
   const totalStudyHours = calculateStudyHours(quizzes);
@@ -63,7 +66,7 @@ export const generateMonthlyReport = async (userId) => {
 };
 
 export const getReportById = async (reportId) => {
-  const report = await Report.findById(reportId).populate('user', 'name email');
+  const report = await Report.findOne({ _id: reportId, isDeleted: false }).populate('user', 'name email');
   if (!report) {
     throw new Error('Report not found');
   }
