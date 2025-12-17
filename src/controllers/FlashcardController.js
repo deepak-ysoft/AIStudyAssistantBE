@@ -32,10 +32,16 @@ export const createFlashcard = async (req, res) => {
 ========================= */
 export const getAllFlashcards = async (req, res) => {
   try {
-    const flashcards = await Flashcard.find({
+    const subject = req.query.subject;
+    const filter = {
       user: req.userId,
       isDeleted: false,
-    })
+    };
+    if (subject) {
+      filter.subject = subject;
+    }
+
+    const flashcards = await Flashcard.find(filter)
       .populate("subject", "name")
       .populate("note", "title")
       .sort({ createdAt: -1 });

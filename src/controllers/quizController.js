@@ -27,10 +27,20 @@ export const createQuiz = async (req, res) => {
 
 export const getAllQuizzes = async (req, res) => {
   try {
-    const quizzes = await Quiz.find({
+    const { subject } = req.query; // 👈 get subject from query
+
+    const filter = {
       user: req.userId,
       isDeleted: false,
-    }).populate("subject", "name");
+    };
+
+    // 👇 apply subject filter only if provided
+    if (subject) {
+      filter.subject = subject;
+    }
+
+    const quizzes = await Quiz.find(filter).populate("subject", "name");
+
     return sendSuccess(res, 200, "Quizzes fetched successfully", quizzes);
   } catch (error) {
     return sendError(res, 400, error.message);

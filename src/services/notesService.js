@@ -18,8 +18,11 @@ export const getNoteById = async (noteId) => {
   return note;
 };
 
-export const getAllNotesByUser = async (userId, query = {}) => {
+export const getAllNotesByUser = async (userId, subject, query = {}) => {
   const filter = { user: userId, ...query, isDeleted: false };
+  if (subject) {
+    filter.subject = subject;
+  }
   const notes = await Note.find(filter)
     .populate("subject", "name")
     .sort("-createdAt");

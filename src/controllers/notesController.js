@@ -35,7 +35,9 @@ export const getNoteById = async (req, res) => {
 
 export const getAllNotes = async (req, res) => {
   try {
-    const notes = await notesService.getAllNotesByUser(req.userId);
+    const { subject } = req.query; // 👈 get subject from query
+
+    const notes = await notesService.getAllNotesByUser(req.userId, subject);
     return sendSuccess(res, 200, "Notes fetched successfully", notes);
   } catch (error) {
     return sendError(res, 400, error.message);
