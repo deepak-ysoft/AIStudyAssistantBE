@@ -47,6 +47,7 @@ export const login = async (email, password) => {
       name: user.name,
       email: user.email,
       grade: user.grade,
+      avatar: user.avatar,
     },
     token,
   };

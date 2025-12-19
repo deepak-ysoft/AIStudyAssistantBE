@@ -92,7 +92,10 @@ export const addResource = async (req, res) => {
       return sendError(res, 400, "Resource ID and type are required");
     }
 
-    const subject = await Subject.findOne({ _id: req.params.id, isDeleted: false });
+    const subject = await Subject.findOne({
+      _id: req.params.id,
+      isDeleted: false,
+    });
     if (!subject) {
       return sendError(res, 404, "Subject not found");
     }
