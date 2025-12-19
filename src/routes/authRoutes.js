@@ -11,5 +11,6 @@ router.post("/reset-password", authController.resetPassword);
 router.get("/profile", authenticate, authController.getProfile);
 router.put("/profile", authenticate, authController.updateProfile);
 router.get("/imagekit-auth", authenticate, authController.getImageKitAuth);
+router.put("/change-password", authenticate, authController.changePassword);
 
 export default router;
