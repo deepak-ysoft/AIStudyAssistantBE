@@ -43,6 +43,10 @@ const userSchema = new mongoose.Schema(
       },
     ],
     verificationToken: String,
+    pendingEmail: {
+      type: String,
+      default: null,
+    },
     isEmailVerified: {
       type: Boolean,
       default: false,

@@ -30,6 +30,7 @@ export const login = async (email, password) => {
   const user = await User.findOne({ email, isDeleted: false }).select(
     "+password"
   );
+  console.log(user);
   if (!user) {
     throw new Error("Invalid email or password");
   }

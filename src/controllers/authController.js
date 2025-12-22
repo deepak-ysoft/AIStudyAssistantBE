@@ -29,7 +29,9 @@ export const login = async (req, res) => {
       return sendError(res, 400, "Please provide email and password");
     }
 
+    console.log(email, password);
     const result = await authService.login(email, password);
+    console.log("result", result);
     return sendSuccess(res, 200, "Login successful", result);
   } catch (error) {
     return sendError(res, 401, error.message);
@@ -174,5 +176,161 @@ export const changePassword = async (req, res) => {
     return sendSuccess(res, 200, "Password changed successfully");
   } catch (error) {
     return sendError(res, 500, error.message);
+  }
+};
+
+export const verifyEmail = async (req, res) => {
+  try {
+    const { token } = req.body;
+
+    if (!token) {
+      return sendError(res, 400, "Verification token required");
+    }
+
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+    const user = await UserModel.findOne({
+      verificationToken: hashedToken,
+    });
+
+    if (!user) {
+      return sendError(res, 400, "Invalid or expired verification token");
+    }
+
+    user.isEmailVerified = true;
+    user.verificationToken = undefined;
+
+    if (user.pendingEmail) {
+      user.email = user.pendingEmail;
+      user.pendingEmail = null;
+    }
+
+    await user.save({ validateBeforeSave: false });
+
+    return sendSuccess(res, 200, "Email verified successfully");
+  } catch (error) {
+    return sendError(res, 500, error.message);
+  }
+};
+
+export const resendVerificationEmail = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) return sendError(res, 400, "Email required");
+
+    const user = await UserModel.findOne({ email });
+
+    if (!user) {
+      return sendSuccess(res, 200, "Verification email sent if user exists");
+    }
+
+    if (user.isEmailVerified) {
+      return sendError(res, 400, "Email already verified");
+    }
+
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    user.verificationToken = crypto
+      .createHash("sha256")
+      .update(rawToken)
+      .digest("hex");
+
+    await user.save({ validateBeforeSave: false });
+
+    const verifyUrl = `${process.env.FRONTEND_URL}/auth/verify-email/${rawToken}`;
+
+    await sendEmail({
+      to: user.email,
+      subject: "Verify Your Email",
+      html: `
+        <p>Hello ${user.name},</p>
+        <p>Please verify your email:</p>
+        <a href="${verifyUrl}">Verify Email</a>
+      `,
+    });
+
+    return sendSuccess(res, 200, "Verification email sent");
+  } catch (error) {
+    return sendError(res, 500, error.message);
+  }
+};
+
+export const changeEmail = async (req, res) => {
+  try {
+    const { newEmail } = req.body;
+
+    if (!newEmail) {
+      return sendError(res, 400, "New email is required");
+    }
+
+    const existing = await UserModel.findOne({ email: newEmail });
+    if (existing) {
+      return sendError(res, 400, "Email already in use");
+    }
+
+    const user = await UserModel.findById(req.userId);
+
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(rawToken)
+      .digest("hex");
+
+    const verifyUrl = `${
+      process.env.FRONTEND_URL
+    }/auth/verify-email/${rawToken}?email=${encodeURIComponent(newEmail)}`;
+
+    await sendEmail({
+      to: newEmail,
+      subject: "Confirm Your New Email",
+      html: `
+        <p>Click below to confirm your new email address:</p>
+        <a href="${verifyUrl}">Confirm Email</a>
+      `,
+    });
+
+    user.pendingEmail = newEmail;
+    user.verificationToken = hashedToken;
+
+    await user.save({ validateBeforeSave: false });
+
+    return sendSuccess(res, 200, "Verification sent to new email");
+  } catch (error) {
+    return sendError(res, 500, error.message);
+  }
+};
+
+export const deleteAccount = async (req, res) => {
+  try {
+    const { password } = req.body;
+
+    if (!password) {
+      return sendError(res, 400, "Password is required to delete the account");
+    }
+
+    const user = await UserModel.findById(req.userId).select("+password");
+
+    if (!user || user.isDeleted) {
+      return sendError(res, 404, "User account not found");
+    }
+
+    const isPasswordValid = await user.matchPassword(password);
+    if (!isPasswordValid) {
+      return sendError(res, 401, "Incorrect password");
+    }
+
+    user.isDeleted = true;
+    user.deletedAt = new Date();
+
+    await user.save();
+
+    return sendSuccess(res, 200, "Your account has been deleted successfully");
+  } catch (error) {
+    console.error("Delete account error:", error);
+    return sendError(
+      res,
+      500,
+      "Something went wrong while deleting the account"
+    );
   }
 };
