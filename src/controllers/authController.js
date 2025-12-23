@@ -29,12 +29,107 @@ export const login = async (req, res) => {
       return sendError(res, 400, "Please provide email and password");
     }
 
-    console.log(email, password);
     const result = await authService.login(email, password);
-    console.log("result", result);
     return sendSuccess(res, 200, "Login successful", result);
   } catch (error) {
+    // 🔥 HANDLE RESTORE CASE
+    if (error.code === "ACCOUNT_DELETED") {
+      return sendError(res, 403, "ACCOUNT_DELETED");
+    }
+
     return sendError(res, 401, error.message);
+  }
+};
+
+const hashOtp = (otp) => crypto.createHash("sha256").update(otp).digest("hex");
+
+export const sendRestoreOtp = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return sendError(res, 400, "Email is required");
+
+    const user = await UserModel.findOne({ email, isDeleted: true });
+    if (!user) {
+      // SECURITY: don’t reveal account status
+      return sendSuccess(res, 200, "OTP sent if account exists");
+    }
+
+    // Generate OTP
+    const otp = authService.generateOtp(); // 6-digit
+
+    user.restoreOtp = hashOtp(otp);
+    user.restoreOtpExpiry = Date.now() + 10 * 60 * 1000; // 10 minutes
+
+    await user.save({ validateBeforeSave: false });
+
+    // Send email
+    await sendEmail({
+      to: user.email,
+      subject: "Restore Your Account – OTP Verification",
+      html: `
+        <p>Hello ${user.name},</p>
+
+        <p>
+          We received a request to restore your account.
+          Please use the verification code below to continue:
+        </p>
+
+        <h2 style="letter-spacing: 4px; font-size: 28px;">
+          ${otp}
+        </h2>
+
+        <p>
+          This OTP is valid for <strong>10 minutes</strong>.
+        </p>
+
+        <p>
+          If you did not request this, you can safely ignore this email.
+        </p>
+
+        <p>
+          Thanks,<br />
+          ${process.env.APP_NAME || "Support Team"}
+        </p>
+      `,
+    });
+
+    return sendSuccess(res, 200, "OTP sent successfully");
+  } catch (error) {
+    console.error("Send Restore OTP Error:", error);
+    return sendError(res, 500, "Failed to send OTP");
+  }
+};
+
+export const verifyRestoreOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    if (!email || !otp) {
+      return sendError(res, 400, "Email and OTP are required");
+    }
+
+    const hashedOtp = hashOtp(otp);
+
+    const user = await UserModel.findOne({
+      email,
+      restoreOtp: hashedOtp,
+      restoreOtpExpiry: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return sendError(res, 400, "Invalid or expired OTP");
+    }
+
+    user.isDeleted = false;
+    user.restoreOtp = undefined;
+    user.restoreOtpExpiry = undefined;
+    user.deletedAt = null;
+
+    await user.save({ validateBeforeSave: false });
+
+    return sendSuccess(res, 200, "Account restored successfully");
+  } catch (error) {
+    console.error("Verify Restore OTP Error:", error);
+    return sendError(res, 500, "Failed to verify OTP");
   }
 };
 

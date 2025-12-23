@@ -1,11 +1,9 @@
 import "dotenv/config"; // 👈 MUST BE FIRST
-
 import express from "express";
 import cors from "cors";
 import { createServer } from "http";
 import connectDB from "./config/db.js";
 import setupSocketIO from "./socket/notification.js";
-
 import authRoutes from "./routes/authRoutes.js";
 import notesRoutes from "./routes/notesRoutes.js";
 import aiRoutes from "./routes/aiRoutes.js";

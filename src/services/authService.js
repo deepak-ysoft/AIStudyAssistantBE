@@ -27,12 +27,17 @@ export const signup = async (name, email, password) => {
 };
 
 export const login = async (email, password) => {
-  const user = await User.findOne({ email, isDeleted: false }).select(
-    "+password"
-  );
-  console.log(user);
+  const user = await User.findOne({ email }).select("+password");
+
   if (!user) {
     throw new Error("Invalid email or password");
+  }
+
+  // 🔥 ACCOUNT DELETED CASE
+  if (user.isDeleted) {
+    const error = new Error("ACCOUNT_DELETED");
+    error.code = "ACCOUNT_DELETED";
+    throw error;
   }
 
   const isPasswordMatch = await user.matchPassword(password);
@@ -52,6 +57,17 @@ export const login = async (email, password) => {
     },
     token,
   };
+};
+
+export const generateOtp = (length = 6) => {
+  const digits = "0123456789";
+  let otp = "";
+
+  for (let i = 0; i < length; i++) {
+    otp += digits[Math.floor(Math.random() * digits.length)];
+  }
+
+  return otp;
 };
 
 export const getProfile = async (userId) => {

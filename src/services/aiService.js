@@ -1,60 +1,131 @@
-import { getGeminiModel } from '../config/gemini.js';
+import { callGroq } from "../config/groq.js";
 
-const model = getGeminiModel();
+const CHAT_MODEL = "llama-3.1-8b-instant";
 
+const SYSTEM_PROMPT = `
+You are an AI study assistant.
+Rules:
+- Be concise and direct
+- Do NOT add extra explanations
+- Do NOT add introductions or conclusions
+- Use bullet points where possible
+- Keep the response short and clear
+`;
+
+/* ---------------- SUMMARY ---------------- */
 export const generateSummary = async (noteContent) => {
-  try {
-    const prompt = `Please create a concise summary of the following notes:\n\n${noteContent}`;
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    return response.text();
-  } catch (error) {
-    throw new Error('Failed to generate summary: ' + error.message);
-  }
+  const res = await callGroq(CHAT_MODEL, [
+    { role: "system", content: SYSTEM_PROMPT },
+    {
+      role: "user",
+      content: `Summarize the content in 5 bullet points max:\n\n${noteContent}`,
+    },
+  ]);
+
+  return res.choices[0].message.content;
 };
 
+/* ---------------- FLASHCARDS ---------------- */
+export const generateFlashcards = async (noteContent, count = 10) => {
+  const prompt = `
+Generate ${count} flashcards.
+Rules:
+- Only question and answer
+- Max 2 sentences per answer
+- Format:
+Question: ...
+Answer: ...
+
+Content:
+${noteContent}
+`;
+
+  const res = await callGroq(CHAT_MODEL, [
+    { role: "system", content: SYSTEM_PROMPT },
+    { role: "user", content: prompt },
+  ]);
+
+  return res.choices[0].message.content;
+};
+
+/* ---------------- MCQs ---------------- */
 export const generateMCQs = async (noteContent, count = 10) => {
-  try {
-    const prompt = `Generate exactly ${count} multiple choice questions based on the following notes. Format each question as: Question number. Question text? A) Option A B) Option B C) Option C D) Option D\nCorrect Answer: X\n\nNotes:\n${noteContent}`;
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    return response.text();
-  } catch (error) {
-    throw new Error('Failed to generate MCQs: ' + error.message);
-  }
+  const prompt = `
+Generate exactly ${count} MCQs.
+Rules:
+- No explanations
+- Only questions and answers
+- Strictly follow format
+
+Format:
+1. Question?
+A) ...
+B) ...
+C) ...
+D) ...
+Answer: X
+
+Content:
+${noteContent}
+`;
+
+  const res = await callGroq(CHAT_MODEL, [
+    { role: "system", content: SYSTEM_PROMPT },
+    { role: "user", content: prompt },
+  ]);
+
+  return res.choices[0].message.content;
 };
 
+/* ---------------- STUDY PLAN ---------------- */
 export const generateStudyPlan = async (availableHours, subjects) => {
-  try {
-    const subjectsList = subjects.join(', ');
-    const prompt = `Create a detailed weekly study plan for a student with ${availableHours} hours available per week for the following subjects: ${subjectsList}. Include daily study schedule, topics to cover, and time allocation for each subject.`;
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    return response.text();
-  } catch (error) {
-    throw new Error('Failed to generate study plan: ' + error.message);
-  }
+  const res = await callGroq(CHAT_MODEL, [
+    { role: "system", content: SYSTEM_PROMPT },
+    {
+      role: "user",
+      content: `Create a weekly study plan.
+Rules:
+- Use bullet points
+- Max 7 days
+- No explanations
+
+Hours: ${availableHours}
+Subjects: ${subjects.join(", ")}`,
+    },
+  ]);
+
+  return res.choices[0].message.content;
 };
 
-export const solveDoubts = async (question, context = '') => {
-  try {
-    const prompt = `${context ? `Context: ${context}\n\n` : ''}Question: ${question}\n\nPlease provide a detailed explanation and answer.`;
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    return response.text();
-  } catch (error) {
-    throw new Error('Failed to solve doubt: ' + error.message);
-  }
+/* ---------------- DOUBT SOLVER ---------------- */
+export const solveDoubts = async (question, context = "") => {
+  const res = await callGroq(CHAT_MODEL, [
+    { role: "system", content: SYSTEM_PROMPT },
+    {
+      role: "user",
+      content: `${
+        context ? `Context: ${context}\n` : ""
+      }Answer in short steps (max 5 points):\n${question}`,
+    },
+  ]);
+
+  return res.choices[0].message.content;
 };
 
-export const generateWeeklyReport = async (userStats) => {
-  try {
-    const statsStr = JSON.stringify(userStats);
-    const prompt = `Based on these study statistics: ${statsStr}\n\nGenerate a comprehensive weekly performance report with insights, strengths, areas for improvement, and recommendations.`;
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    return response.text();
-  } catch (error) {
-    throw new Error('Failed to generate report: ' + error.message);
-  }
+/* ---------------- WEEKLY REPORT ---------------- */
+export const generateWeeklyReport = async (stats) => {
+  const res = await callGroq(CHAT_MODEL, [
+    { role: "system", content: SYSTEM_PROMPT },
+    {
+      role: "user",
+      content: `Generate a weekly report.
+Rules:
+- Max 6 bullet points
+- Short and actionable
+
+Stats: ${JSON.stringify(stats)}`,
+    },
+  ]);
+
+  return res.choices[0].message.content;
 };
