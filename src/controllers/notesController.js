@@ -62,20 +62,6 @@ export const deleteNote = async (req, res) => {
   }
 };
 
-export const generateSummary = async (req, res) => {
-  try {
-    const note = await notesService.getNoteById(req.params.id);
-    const summary = await aiService.generateSummary(note.content);
-    const updatedNote = await notesService.addSummaryToNote(
-      req.params.id,
-      summary
-    );
-    return sendSuccess(res, 200, "Summary generated successfully", updatedNote);
-  } catch (error) {
-    return sendError(res, 400, error.message);
-  }
-};
-
 export const uploadFile = async (req, res) => {
   try {
     if (!req.file) {

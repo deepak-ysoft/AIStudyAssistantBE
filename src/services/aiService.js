@@ -28,7 +28,7 @@ export const generateSummary = async (noteContent) => {
 /* ---------------- FLASHCARDS ---------------- */
 export const generateFlashcards = async (noteContent, count = 10) => {
   const prompt = `
-Generate ${count} flashcards.
+Generate around ${count} flashcards.
 Rules:
 - Only question and answer
 - Max 2 sentences per answer
@@ -49,21 +49,23 @@ ${noteContent}
 };
 
 /* ---------------- MCQs ---------------- */
-export const generateMCQs = async (noteContent, count = 10) => {
+export const generateQuiz = async (noteContent, count = 5) => {
   const prompt = `
-Generate exactly ${count} MCQs.
-Rules:
-- No explanations
-- Only questions and answers
-- Strictly follow format
+Generate around ${count} multiple choice questions.
 
-Format:
+Rules:
+- 4 options per question (A, B, C, D)
+- Only ONE correct answer
+- Short explanation (1 sentence)
+- Follow EXACT format:
+
 1. Question?
-A) ...
-B) ...
-C) ...
-D) ...
-Answer: X
+A) Option
+B) Option
+C) Option
+D) Option
+Correct: A
+Explanation: ...
 
 Content:
 ${noteContent}

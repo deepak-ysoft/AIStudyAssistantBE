@@ -1,8 +1,5 @@
 import { sendSuccess, sendError } from "../utils/response.js";
 import Flashcard from "../models/FlashcardModel.js";
-import * as notesService from "../services/notesService.js";
-import FlashcardModel from "../models/FlashcardModel.js";
-import * as aiService from "../services/aiService.js";
 
 /* =========================
    CREATE FLASHCARD
@@ -30,64 +27,6 @@ export const createFlashcard = async (req, res) => {
   }
 };
 
-/* =========================
-   GENERATE FLASHCARDS (NOTES)
-========================= */
-export const generateAndSaveFlashcards = async (req, res) => {
-  try {
-    const note = await notesService.getNoteById(req.params.id);
-
-    if (!note) {
-      return sendError(res, 404, "Note not found");
-    }
-
-    const flashcardText = await aiService.generateFlashcards(note.content);
-    console.log("flashcardText", flashcardText);
-
-    // Parse AI response (numbered list style)
-    const flashcards = flashcardText
-      .split("\n")
-      .filter((line) => line.trim())
-      .reduce((acc, line) => {
-        const questionMatch = line.match(/^\d+\.\s*(.+)/); // Matches "1. Question text"
-        const answerMatch = line.match(/^Answer:\s*(.+)/i);
-
-        if (questionMatch) {
-          acc.push({ question: questionMatch[1].trim(), answer: "" });
-        } else if (answerMatch && acc.length > 0) {
-          acc[acc.length - 1].answer = answerMatch[1].trim();
-        }
-
-        return acc;
-      }, []);
-
-    if (!flashcards.length) {
-      return sendError(res, 400, "No flashcards found in AI response");
-    }
-
-    // Delete existing flashcards for this note & user
-    await FlashcardModel.deleteMany({ note: note._id, user: req.user._id });
-
-    // Save new flashcards in DB
-    const savedFlashcards = await FlashcardModel.insertMany(
-      flashcards.map((fc) => ({
-        ...fc,
-        user: req.user._id,
-        subject: note.subject,
-        note: note._id,
-      }))
-    );
-
-    return sendSuccess(
-      res,
-      200,
-      "Flashcards generated successfully",
-      savedFlashcards
-    );
-  } catch (error) {
-    return sendError(res, 400, error.message);
-  }
-};
 
 /* =========================
    GET ALL FLASHCARDS (USER)

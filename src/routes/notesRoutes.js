@@ -9,7 +9,6 @@ router.get("/", authenticate, notesController.getAllNotes);
 router.get("/:id", authenticate, notesController.getNoteById);
 router.put("/:id", authenticate, notesController.updateNote);
 router.delete("/:id", authenticate, notesController.deleteNote);
-router.post("/:id/summarize", authenticate, notesController.generateSummary);
 router.post("/upload", authenticate, notesController.uploadFile);
 
 export default router;
