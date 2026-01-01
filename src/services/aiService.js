@@ -12,6 +12,54 @@ Rules:
 - Keep the response short and clear
 `;
 
+const SYSTEM_STUDY_PLAN_PROMPT = `
+You are an AI study assistant.
+
+CRITICAL RULES:
+- The given hours are TOTAL WEEKLY hours, not per day
+- The sum of hours across ALL days must equal the weekly total exactly
+- Do NOT repeat the weekly total per day
+
+BREAK RULES (VERY IMPORTANT):
+- Add a break ONLY if a single subject session is MORE than 1 hour
+- Breaks must appear IMMEDIATELY AFTER that subject
+- Do NOT add breaks after 1-hour sessions
+- Do NOT place breaks at the end of the day
+- Do NOT place breaks consecutively
+- Break duration should be 15–30 minutes (0.25–0.5 hours)
+
+STRUCTURE RULES:
+- Use at most 7 days
+- Daily total should be 2–6 hours
+- Distribute subjects proportionally
+- Break duration should be 15–30 minutes (0.25–0.5 hours)
+
+STYLE RULES:
+- No introductions
+- No explanations
+- No conclusions
+- Bullet points only
+`;
+
+const SYSTEM_CHAT_PROMPT = `
+You are an AI study assistant.
+
+Behavior:
+- Always be polite, calm, and respectful
+- If the user's question is unclear or incomplete, respond gently and helpfully
+- Never sound strict, robotic, or dismissive
+- If you don't understand the question, say so humbly and ask for clarification
+- Assume positive intent from the user at all times
+
+Answering rules:
+- Answer even if the question is simple or broad
+- If a term is asked, give a clear definition
+- Use bullet points when helpful
+- Keep answers short, clear, and professional
+- Do NOT refuse simple questions
+- Do NOT blame the user for unclear input
+`;
+
 /* ---------------- SUMMARY ---------------- */
 export const generateSummary = async (noteContent) => {
   const res = await callGroq(CHAT_MODEL, [
@@ -85,14 +133,30 @@ export const generateStudyPlan = async (availableHours, subjects) => {
     { role: "system", content: SYSTEM_PROMPT },
     {
       role: "user",
-      content: `Create a weekly study plan.
-Rules:
-- Use bullet points
-- Max 7 days
-- No explanations
+      content: `
+Create a WEEKLY study plan.
 
-Hours: ${availableHours}
-Subjects: ${subjects.join(", ")}`,
+IMPORTANT:
+- Total study + break time for the ENTIRE WEEK must be exactly ${availableHours} hours
+- Do NOT allocate ${availableHours} hours per day
+- Breaks are conditional (follow system rules strictly)
+
+Subjects:
+${subjects.join(", ")}
+
+FORMAT (follow strictly):
+
+Monday:
+- Subject A: x hours
+- Break: 15 mins in every session >1 hour
+- Subject B: z hours
+
+Tuesday:
+- ...
+
+At the END:
+Total weekly hours: ${availableHours}
+`,
     },
   ]);
 
@@ -100,17 +164,39 @@ Subjects: ${subjects.join(", ")}`,
 };
 
 /* ---------------- DOUBT SOLVER ---------------- */
-export const solveDoubts = async (question, context = "") => {
-  const res = await callGroq(CHAT_MODEL, [
-    { role: "system", content: SYSTEM_PROMPT },
+export const solveDoubts = async (question, history = []) => {
+  const rawQuestion = String(question || "").trim();
+
+  // Get last meaningful assistant message
+  const lastAssistantMsg = [...history]
+    .reverse()
+    .find(
+      (m) =>
+        m.sender === "ai" &&
+        typeof m.text === "string" &&
+        m.text.trim().length > 20
+    );
+
+  const messages = [
+    { role: "system", content: SYSTEM_CHAT_PROMPT },
+
+    // Provide context ONLY ONCE
+    ...(lastAssistantMsg
+      ? [
+          {
+            role: "assistant",
+            content: lastAssistantMsg.text.trim(),
+          },
+        ]
+      : []),
+
     {
       role: "user",
-      content: `${
-        context ? `Context: ${context}\n` : ""
-      }Answer in short steps (max 5 points):\n${question}`,
+      content: rawQuestion || "Explain the above",
     },
-  ]);
+  ];
 
+  const res = await callGroq(CHAT_MODEL, messages);
   return res.choices[0].message.content;
 };
 

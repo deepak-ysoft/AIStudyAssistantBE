@@ -11,7 +11,11 @@ router.post(
   authenticate,
   aiController.generateQuizFromNote
 );
-router.post("/:id/flashcards", aiController.generateAndSaveFlashcards);
+router.post(
+  "/:id/flashcards",
+  authenticate,
+  aiController.generateAndSaveFlashcards
+);
 router.post("/:id/summarize", authenticate, aiController.generateSummary);
 router.post("/study-plan", authenticate, aiController.generateStudyPlan);
 router.post("/solve", authenticate, aiController.solveProblem);

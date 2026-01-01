@@ -8,13 +8,14 @@ import { parseQuizFromAI } from "../utils/parseQuiz.js";
 
 export const chat = async (req, res) => {
   try {
-    const { message } = req.body;
+    const { message, history = [] } = req.body;
 
     if (!message) {
       return sendError(res, 400, "Message is required");
     }
 
-    const response = await aiService.solveDoubts(message);
+    const response = await aiService.solveDoubts(message, history);
+
     return sendSuccess(res, 200, "Response generated successfully", {
       response,
     });
@@ -78,7 +79,6 @@ export const generateAndSaveFlashcards = async (req, res) => {
     }
 
     const flashcardText = await aiService.generateFlashcards(note.content);
-    console.log("flashcardText", flashcardText);
 
     // Parse AI response (numbered list style)
     const flashcards = flashcardText
