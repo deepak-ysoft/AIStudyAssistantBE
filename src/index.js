@@ -10,7 +10,8 @@ import aiRoutes from "./routes/aiRoutes.js";
 import subjectRoutes from "./routes/subjectRoutes.js";
 import quizRoutes from "./routes/quizRoutes.js";
 import flashcards from "./routes/flashcardRoutes.js";
-import reportRoutes from "./routes/reportRoutes.js";
+import pomodoroRoutes from "./routes/pomodoroRoutes.js";
+import dashboarRouter from "./routes/dashboardRoutes.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -39,7 +40,8 @@ app.use("/ai", aiRoutes);
 app.use("/subjects", subjectRoutes);
 app.use("/quizzes", quizRoutes);
 app.use("/flashcards", flashcards);
-app.use("/reports", reportRoutes);
+app.use("/pomodoro", pomodoroRoutes);
+app.use("/dashboard", dashboarRouter);
 
 const httpServer = createServer(app);
 

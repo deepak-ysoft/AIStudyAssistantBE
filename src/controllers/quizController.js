@@ -1,5 +1,6 @@
 import { sendSuccess, sendError } from "../utils/response.js";
 import Quiz from "../models/QuizModel.js";
+import QuizAttempt from "../models/QuizAttempt.js";
 
 export const createQuiz = async (req, res) => {
   try {
@@ -76,6 +77,42 @@ export const updateQuiz = async (req, res) => {
   } catch (error) {
     return sendError(res, 400, error.message);
   }
+};
+
+// Save quiz attempt
+export const saveQuizAttempt = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { quizId, answers, score, timeTaken } = req.body;
+
+    const quiz = await Quiz.findById(quizId);
+    if (!quiz) return sendError(res, 404, "Quiz not found");
+
+    const totalMarks = quiz.questions.length;
+    const passed = score > (quiz.passingMarks || 0);
+
+    const attempt = await QuizAttempt.create({
+      quiz: quizId,
+      user: userId,
+      answers,
+      score,
+      totalMarks,
+      passed,
+      timeTaken,
+    });
+
+    return sendSuccess(res, 201, "Quiz completed", attempt);
+  } catch (err) {
+    return sendError(res, 500, err.message);
+  }
+};
+
+// Optional: get all attempts for a user
+export const getAllAttempts = async (req, res) => {
+  const attempts = await QuizAttempt.find({ user: req.user._id }).populate(
+    "quiz"
+  );
+  res.json({ data: attempts });
 };
 
 export const deleteQuiz = async (req, res) => {
