@@ -12,6 +12,8 @@ import quizRoutes from "./routes/quizRoutes.js";
 import flashcards from "./routes/flashcardRoutes.js";
 import pomodoroRoutes from "./routes/pomodoroRoutes.js";
 import dashboarRouter from "./routes/dashboardRoutes.js";
+import chatRouter from "./routes/chatRouter.js";
+import studyPlanRoutes from "./routes/studyPlanRoutes.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -42,6 +44,8 @@ app.use("/quizzes", quizRoutes);
 app.use("/flashcards", flashcards);
 app.use("/pomodoro", pomodoroRoutes);
 app.use("/dashboard", dashboarRouter);
+app.use("/chat", chatRouter);
+app.use("/study-plan", studyPlanRoutes);
 
 const httpServer = createServer(app);
 

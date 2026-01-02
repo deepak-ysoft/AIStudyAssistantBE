@@ -12,35 +12,6 @@ Rules:
 - Keep the response short and clear
 `;
 
-const SYSTEM_STUDY_PLAN_PROMPT = `
-You are an AI study assistant.
-
-CRITICAL RULES:
-- The given hours are TOTAL WEEKLY hours, not per day
-- The sum of hours across ALL days must equal the weekly total exactly
-- Do NOT repeat the weekly total per day
-
-BREAK RULES (VERY IMPORTANT):
-- Add a break ONLY if a single subject session is MORE than 1 hour
-- Breaks must appear IMMEDIATELY AFTER that subject
-- Do NOT add breaks after 1-hour sessions
-- Do NOT place breaks at the end of the day
-- Do NOT place breaks consecutively
-- Break duration should be 15–30 minutes (0.25–0.5 hours)
-
-STRUCTURE RULES:
-- Use at most 7 days
-- Daily total should be 2–6 hours
-- Distribute subjects proportionally
-- Break duration should be 15–30 minutes (0.25–0.5 hours)
-
-STYLE RULES:
-- No introductions
-- No explanations
-- No conclusions
-- Bullet points only
-`;
-
 const SYSTEM_CHAT_PROMPT = `
 You are an AI study assistant.
 

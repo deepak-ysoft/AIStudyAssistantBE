@@ -3,24 +3,51 @@ import * as aiService from "../services/aiService.js";
 import * as notesService from "../services/notesService.js";
 import FlashcardModel from "../models/FlashcardModel.js";
 import QuizModel from "../models/QuizModel.js";
+import ChatMessage from "../models/ChatModel.js";
 import SubjectModel from "../models/SubjectModel.js";
 import { parseQuizFromAI } from "../utils/parseQuiz.js";
+import StudyPlanModel from "../models/StudyPlanModel.js";
 
 export const chat = async (req, res) => {
   try {
-    const { message, history = [] } = req.body;
+    const { message } = req.body;
+    const userId = req.user.id;
 
     if (!message) {
       return sendError(res, 200, "Message is required");
     }
 
+    // Save USER message
+    const userMsg = await ChatMessage.create({
+      userId,
+      sender: "user",
+      text: message,
+    });
+
+    // Fetch last 6 non-deleted messages for context
+    const history = await ChatMessage.find({
+      userId,
+      deleted: false,
+    })
+      .sort({ createdAt: -1 })
+      .limit(6)
+      .lean();
+
     const response = await aiService.solveDoubts(message, history);
 
+    // Save AI message
+    const aiMsg = await ChatMessage.create({
+      userId,
+      sender: "ai",
+      text: response,
+    });
+
     return sendSuccess(res, 200, "Response generated successfully", {
-      response,
+      userMessage: userMsg,
+      aiMessage: aiMsg,
     });
   } catch (error) {
-    return sendError(res, 200, error.message);
+    return sendError(res, 500, error.message);
   }
 };
 
@@ -141,16 +168,34 @@ export const generateSummary = async (req, res) => {
 
 export const generateStudyPlan = async (req, res) => {
   try {
+    const userId = req.user.id;
     const { availableHours, subjects } = req.body;
 
-    if (!availableHours || !subjects) {
-      return sendError(res, 200, "Available hours and subjects are required");
+    if (!availableHours || !subjects?.length) {
+      return sendError(res, 400, "Available hours and subjects are required");
     }
 
-    const plan = await aiService.generateStudyPlan(availableHours, subjects);
-    return sendSuccess(res, 200, "Study plan generated successfully", { plan });
+    const planText = await aiService.generateStudyPlan(
+      availableHours,
+      subjects
+    );
+
+    const plan = await StudyPlanModel.findOneAndUpdate(
+      { userId },
+      {
+        userId,
+        availableHours,
+        subjects,
+        planText,
+      },
+      { upsert: true, new: true }
+    );
+
+    return sendSuccess(res, 200, "Study plan generated successfully", {
+      plan: plan.planText,
+    });
   } catch (error) {
-    return sendError(res, 200, error.message);
+    return sendError(res, 500, error.message);
   }
 };
 

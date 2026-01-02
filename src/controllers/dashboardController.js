@@ -1,6 +1,5 @@
 import Subject from "../models/SubjectModel.js";
 import Note from "../models/NotesModel.js";
-import Quiz from "../models/QuizModel.js";
 import Pomodoro from "../models/PomodoroModel.js";
 import QuizAttempt from "../models/QuizAttempt.js";
 import { sendSuccess, sendError } from "../utils/response.js";
