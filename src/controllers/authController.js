@@ -11,13 +11,13 @@ export const signup = async (req, res) => {
     const { name, email, password } = req.body;
 
     if (!name || !email || !password) {
-      return sendError(res, 400, "Please provide all required fields");
+      return sendError(res, 200, "Please provide all required fields");
     }
 
     const result = await authService.signup(name, email, password);
     return sendSuccess(res, 201, "User registered successfully", result);
   } catch (error) {
-    return sendError(res, 400, error.message);
+    return sendError(res, 200, error.message);
   }
 };
 
@@ -95,8 +95,7 @@ export const sendRestoreOtp = async (req, res) => {
 
     return sendSuccess(res, 200, "OTP sent successfully");
   } catch (error) {
-    console.error("Send Restore OTP Error:", error);
-    return sendError(res, 500, "Failed to send OTP");
+    return sendError(res, 200, "Failed to send OTP");
   }
 };
 
@@ -104,7 +103,7 @@ export const verifyRestoreOtp = async (req, res) => {
   try {
     const { email, otp } = req.body;
     if (!email || !otp) {
-      return sendError(res, 400, "Email and OTP are required");
+      return sendError(res, 200, "Email and OTP are required");
     }
 
     const hashedOtp = hashOtp(otp);
@@ -116,7 +115,7 @@ export const verifyRestoreOtp = async (req, res) => {
     });
 
     if (!user) {
-      return sendError(res, 400, "Invalid or expired OTP");
+      return sendError(res, 200, "Invalid or expired OTP");
     }
 
     user.isDeleted = false;
@@ -128,8 +127,7 @@ export const verifyRestoreOtp = async (req, res) => {
 
     return sendSuccess(res, 200, "Account restored successfully");
   } catch (error) {
-    console.error("Verify Restore OTP Error:", error);
-    return sendError(res, 500, "Failed to verify OTP");
+    return sendError(res, 200, "Failed to verify OTP");
   }
 };
 
@@ -138,7 +136,7 @@ export const getProfile = async (req, res) => {
     const user = await authService.getProfile(req.userId);
     return sendSuccess(res, 200, "Profile fetched successfully", user);
   } catch (error) {
-    return sendError(res, 400, error.message);
+    return sendError(res, 200, error.message);
   }
 };
 
@@ -147,7 +145,7 @@ export const updateProfile = async (req, res) => {
     const user = await authService.updateProfile(req.userId, req.body);
     return sendSuccess(res, 200, "Profile updated successfully", user);
   } catch (error) {
-    return sendError(res, 400, error.message);
+    return sendError(res, 200, error.message);
   }
 };
 
@@ -195,7 +193,7 @@ export const forgotPassword = async (req, res) => {
 
     return sendSuccess(res, 200, "Password reset link sent");
   } catch (error) {
-    return sendError(res, 500, error.message);
+    return sendError(res, 200, error.message);
   }
 };
 
@@ -203,7 +201,7 @@ export const resetPassword = async (req, res) => {
   try {
     const { token, newPassword } = req.body;
     if (!token || !newPassword) {
-      return sendError(res, 400, "Token and new password required");
+      return sendError(res, 200, "Token and new password required");
     }
 
     const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
@@ -214,7 +212,7 @@ export const resetPassword = async (req, res) => {
     });
 
     if (!user) {
-      return sendError(res, 400, "Invalid or expired token");
+      return sendError(res, 200, "Invalid or expired token");
     }
 
     user.password = newPassword;
@@ -225,7 +223,7 @@ export const resetPassword = async (req, res) => {
 
     return sendSuccess(res, 200, "Password reset successfully");
   } catch (error) {
-    return sendError(res, 500, error.message);
+    return sendError(res, 200, error.message);
   }
 };
 
@@ -236,7 +234,7 @@ export const changePassword = async (req, res) => {
     if (!currentPassword || !newPassword) {
       return sendError(
         res,
-        400,
+        200,
         "Current password and new password are required"
       );
     }
@@ -251,7 +249,7 @@ export const changePassword = async (req, res) => {
     // Validate current password
     const isMatch = await user.matchPassword(currentPassword);
     if (!isMatch) {
-      return sendError(res, 400, "Current password is incorrect");
+      return sendError(res, 200, "Current password is incorrect");
     }
 
     // Prevent same password reuse
@@ -259,7 +257,7 @@ export const changePassword = async (req, res) => {
     if (isSame) {
       return sendError(
         res,
-        400,
+        200,
         "New password must be different from current password"
       );
     }
@@ -270,7 +268,7 @@ export const changePassword = async (req, res) => {
 
     return sendSuccess(res, 200, "Password changed successfully");
   } catch (error) {
-    return sendError(res, 500, error.message);
+    return sendError(res, 200, error.message);
   }
 };
 
@@ -279,7 +277,7 @@ export const verifyEmail = async (req, res) => {
     const { token } = req.body;
 
     if (!token) {
-      return sendError(res, 400, "Verification token required");
+      return sendError(res, 200, "Verification token required");
     }
 
     const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
@@ -289,7 +287,7 @@ export const verifyEmail = async (req, res) => {
     });
 
     if (!user) {
-      return sendError(res, 400, "Invalid or expired verification token");
+      return sendError(res, 200, "Invalid or expired verification token");
     }
 
     user.isEmailVerified = true;
@@ -304,7 +302,7 @@ export const verifyEmail = async (req, res) => {
 
     return sendSuccess(res, 200, "Email verified successfully");
   } catch (error) {
-    return sendError(res, 500, error.message);
+    return sendError(res, 200, error.message);
   }
 };
 
@@ -312,7 +310,7 @@ export const resendVerificationEmail = async (req, res) => {
   try {
     const { email } = req.body;
 
-    if (!email) return sendError(res, 400, "Email required");
+    if (!email) return sendError(res, 200, "Email required");
 
     const user = await UserModel.findOne({ email });
 
@@ -321,7 +319,7 @@ export const resendVerificationEmail = async (req, res) => {
     }
 
     if (user.isEmailVerified) {
-      return sendError(res, 400, "Email already verified");
+      return sendError(res, 200, "Email already verified");
     }
 
     const rawToken = crypto.randomBytes(32).toString("hex");
@@ -346,7 +344,7 @@ export const resendVerificationEmail = async (req, res) => {
 
     return sendSuccess(res, 200, "Verification email sent");
   } catch (error) {
-    return sendError(res, 500, error.message);
+    return sendError(res, 200, error.message);
   }
 };
 
@@ -355,12 +353,12 @@ export const changeEmail = async (req, res) => {
     const { newEmail } = req.body;
 
     if (!newEmail) {
-      return sendError(res, 400, "New email is required");
+      return sendError(res, 200, "New email is required");
     }
 
     const existing = await UserModel.findOne({ email: newEmail });
     if (existing) {
-      return sendError(res, 400, "Email already in use");
+      return sendError(res, 200, "Email already in use");
     }
 
     const user = await UserModel.findById(req.userId);
@@ -391,7 +389,7 @@ export const changeEmail = async (req, res) => {
 
     return sendSuccess(res, 200, "Verification sent to new email");
   } catch (error) {
-    return sendError(res, 500, error.message);
+    return sendError(res, 200, error.message);
   }
 };
 
@@ -400,7 +398,7 @@ export const deleteAccount = async (req, res) => {
     const { password } = req.body;
 
     if (!password) {
-      return sendError(res, 400, "Password is required to delete the account");
+      return sendError(res, 200, "Password is required to delete the account");
     }
 
     const user = await UserModel.findById(req.userId).select("+password");
@@ -424,7 +422,7 @@ export const deleteAccount = async (req, res) => {
     console.error("Delete account error:", error);
     return sendError(
       res,
-      500,
+      200,
       "Something went wrong while deleting the account"
     );
   }

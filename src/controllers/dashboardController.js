@@ -174,7 +174,7 @@ export const getDashboardData = async (req, res) => {
       },
     });
   } catch (err) {
-    return sendError(res, 400, err.message);
+    return sendError(res, 200, err.message);
   }
 };
 

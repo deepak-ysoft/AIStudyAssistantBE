@@ -7,7 +7,7 @@ export const createQuiz = async (req, res) => {
     const { title, description, duration, subject, questions } = req.body;
 
     if (!title || !questions || questions.length === 0) {
-      return sendError(res, 400, "Title and questions are required");
+      return sendError(res, 200, "Title and questions are required");
     }
 
     const quiz = await Quiz.create({
@@ -22,7 +22,7 @@ export const createQuiz = async (req, res) => {
 
     return sendSuccess(res, 201, "Quiz created successfully", quiz);
   } catch (error) {
-    return sendError(res, 400, error.message);
+    return sendError(res, 200, error.message);
   }
 };
 
@@ -44,7 +44,7 @@ export const getAllQuizzes = async (req, res) => {
 
     return sendSuccess(res, 200, "Quizzes fetched successfully", quizzes);
   } catch (error) {
-    return sendError(res, 400, error.message);
+    return sendError(res, 200, error.message);
   }
 };
 
@@ -59,7 +59,7 @@ export const getQuizById = async (req, res) => {
     }
     return sendSuccess(res, 200, "Quiz fetched successfully", quiz);
   } catch (error) {
-    return sendError(res, 400, error.message);
+    return sendError(res, 200, error.message);
   }
 };
 
@@ -75,7 +75,7 @@ export const updateQuiz = async (req, res) => {
     }
     return sendSuccess(res, 200, "Quiz updated successfully", quiz);
   } catch (error) {
-    return sendError(res, 400, error.message);
+    return sendError(res, 200, error.message);
   }
 };
 
@@ -103,7 +103,7 @@ export const saveQuizAttempt = async (req, res) => {
 
     return sendSuccess(res, 201, "Quiz completed", attempt);
   } catch (err) {
-    return sendError(res, 500, err.message);
+    return sendError(res, 200, err.message);
   }
 };
 
@@ -132,7 +132,7 @@ export const deleteQuiz = async (req, res) => {
 
     return sendSuccess(res, 200, "Quiz deleted successfully");
   } catch (error) {
-    return sendError(res, 400, error.message);
+    return sendError(res, 200, error.message);
   }
 };
 
@@ -147,7 +147,7 @@ export const startQuiz = async (req, res) => {
     }
     return sendSuccess(res, 200, "Quiz started", { quiz });
   } catch (error) {
-    return sendError(res, 400, error.message);
+    return sendError(res, 200, error.message);
   }
 };
 
@@ -156,7 +156,7 @@ export const submitAnswer = async (req, res) => {
     const { answers } = req.body;
 
     if (!answers) {
-      return sendError(res, 400, "Answers are required");
+      return sendError(res, 200, "Answers are required");
     }
 
     const quiz = await Quiz.findById(req.params.id);
@@ -186,7 +186,7 @@ export const submitAnswer = async (req, res) => {
       percentage: (score / quiz.totalMarks) * 100,
     });
   } catch (error) {
-    return sendError(res, 400, error.message);
+    return sendError(res, 200, error.message);
   }
 };
 
@@ -209,6 +209,6 @@ export const getResults = async (req, res) => {
       totalAttempts: userAttempts.length,
     });
   } catch (error) {
-    return sendError(res, 400, error.message);
+    return sendError(res, 200, error.message);
   }
 };

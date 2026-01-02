@@ -7,7 +7,7 @@ export const createNote = async (req, res) => {
     const { title, content, subject } = req.body;
 
     if (!title || !content) {
-      return sendError(res, 400, "Title and content are required");
+      return sendError(res, 200, "Title and content are required");
     }
 
     const noteData = {
@@ -20,7 +20,7 @@ export const createNote = async (req, res) => {
     const note = await notesService.createNote(noteData);
     return sendSuccess(res, 201, "Note created successfully", note);
   } catch (error) {
-    return sendError(res, 400, error.message);
+    return sendError(res, 200, error.message);
   }
 };
 
@@ -40,7 +40,7 @@ export const getAllNotes = async (req, res) => {
     const notes = await notesService.getAllNotesByUser(req.userId, subject);
     return sendSuccess(res, 200, "Notes fetched successfully", notes);
   } catch (error) {
-    return sendError(res, 400, error.message);
+    return sendError(res, 200, error.message);
   }
 };
 
@@ -49,7 +49,7 @@ export const updateNote = async (req, res) => {
     const note = await notesService.updateNote(req.params.id, req.body);
     return sendSuccess(res, 200, "Note updated successfully", note);
   } catch (error) {
-    return sendError(res, 400, error.message);
+    return sendError(res, 200, error.message);
   }
 };
 
@@ -58,20 +58,20 @@ export const deleteNote = async (req, res) => {
     await notesService.deleteNote(req.params.id, req);
     return sendSuccess(res, 200, "Note deleted successfully");
   } catch (error) {
-    return sendError(res, 400, error.message);
+    return sendError(res, 200, error.message);
   }
 };
 
 export const uploadFile = async (req, res) => {
   try {
     if (!req.file) {
-      return sendError(res, 400, "No file uploaded");
+      return sendError(res, 200, "No file uploaded");
     }
     return sendSuccess(res, 200, "File uploaded successfully", {
       filePath: req.file.path,
       fileName: req.file.originalname,
     });
   } catch (error) {
-    return sendError(res, 400, error.message);
+    return sendError(res, 200, error.message);
   }
 };

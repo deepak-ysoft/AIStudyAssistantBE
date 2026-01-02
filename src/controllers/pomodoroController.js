@@ -6,7 +6,7 @@ export const startSession = async (req, res) => {
     const { type, duration } = req.body;
 
     if (!type || !duration) {
-      return sendError(res, 400, "Type and duration are required");
+      return sendError(res, 200, "Type and duration are required");
     }
 
     const session = await Pomodoro.create({
@@ -18,7 +18,7 @@ export const startSession = async (req, res) => {
 
     return sendSuccess(res, 201, "Session started", session);
   } catch (error) {
-    return sendError(res, 400, error.message);
+    return sendError(res, 200, error.message);
   }
 };
 
@@ -41,7 +41,7 @@ export const endSession = async (req, res) => {
 
     return sendSuccess(res, 200, "Session ended", session);
   } catch (error) {
-    return sendError(res, 400, error.message);
+    return sendError(res, 200, error.message);
   }
 };
 
@@ -65,7 +65,7 @@ export const getTodayStats = async (req, res) => {
       sessions: sessions.length,
     });
   } catch (error) {
-    return sendError(res, 400, error.message);
+    return sendError(res, 200, error.message);
   }
 };
 
@@ -77,6 +77,6 @@ export const getHistory = async (req, res) => {
 
     return sendSuccess(res, 200, "History fetched", history);
   } catch (error) {
-    return sendError(res, 400, error.message);
+    return sendError(res, 200, error.message);
   }
 };

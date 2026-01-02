@@ -11,7 +11,7 @@ export const chat = async (req, res) => {
     const { message, history = [] } = req.body;
 
     if (!message) {
-      return sendError(res, 400, "Message is required");
+      return sendError(res, 200, "Message is required");
     }
 
     const response = await aiService.solveDoubts(message, history);
@@ -20,7 +20,7 @@ export const chat = async (req, res) => {
       response,
     });
   } catch (error) {
-    return sendError(res, 500, error.message);
+    return sendError(res, 200, error.message);
   }
 };
 
@@ -36,7 +36,7 @@ export const generateQuizFromNote = async (req, res) => {
     const questions = parseQuizFromAI(aiText);
 
     if (!questions.length) {
-      return sendError(res, 400, "Failed to generate quiz questions");
+      return sendError(res, 200, "Failed to generate quiz questions");
     }
 
     // 🔹 Delete existing quiz for same note + user
@@ -66,7 +66,7 @@ export const generateQuizFromNote = async (req, res) => {
     return sendSuccess(res, 201, "Quiz generated successfully", quiz);
   } catch (error) {
     console.error(error);
-    return sendError(res, 500, error.message);
+    return sendError(res, 200, error.message);
   }
 };
 
@@ -98,7 +98,7 @@ export const generateAndSaveFlashcards = async (req, res) => {
       }, []);
 
     if (!flashcards.length) {
-      return sendError(res, 400, "No flashcards found in AI response");
+      return sendError(res, 200, "No flashcards found in AI response");
     }
 
     // Delete existing flashcards for this note & user
@@ -121,7 +121,7 @@ export const generateAndSaveFlashcards = async (req, res) => {
       savedFlashcards
     );
   } catch (error) {
-    return sendError(res, 400, error.message);
+    return sendError(res, 200, error.message);
   }
 };
 
@@ -135,7 +135,7 @@ export const generateSummary = async (req, res) => {
     );
     return sendSuccess(res, 200, "Summary generated successfully", updatedNote);
   } catch (error) {
-    return sendError(res, 400, error.message);
+    return sendError(res, 200, error.message);
   }
 };
 
@@ -144,13 +144,13 @@ export const generateStudyPlan = async (req, res) => {
     const { availableHours, subjects } = req.body;
 
     if (!availableHours || !subjects) {
-      return sendError(res, 400, "Available hours and subjects are required");
+      return sendError(res, 200, "Available hours and subjects are required");
     }
 
     const plan = await aiService.generateStudyPlan(availableHours, subjects);
     return sendSuccess(res, 200, "Study plan generated successfully", { plan });
   } catch (error) {
-    return sendError(res, 500, error.message);
+    return sendError(res, 200, error.message);
   }
 };
 
@@ -159,7 +159,7 @@ export const solveProblem = async (req, res) => {
     const { question, context } = req.body;
 
     if (!question) {
-      return sendError(res, 400, "Question is required");
+      return sendError(res, 200, "Question is required");
     }
 
     const solution = await aiService.solveDoubts(question, context);
@@ -167,7 +167,7 @@ export const solveProblem = async (req, res) => {
       solution,
     });
   } catch (error) {
-    return sendError(res, 500, error.message);
+    return sendError(res, 200, error.message);
   }
 };
 
@@ -184,6 +184,6 @@ export const generateWeeklyReport = async (req, res) => {
       report,
     });
   } catch (error) {
-    return sendError(res, 500, error.message);
+    return sendError(res, 200, error.message);
   }
 };

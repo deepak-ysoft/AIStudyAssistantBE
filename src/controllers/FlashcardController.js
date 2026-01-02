@@ -9,7 +9,7 @@ export const createFlashcard = async (req, res) => {
     const { question, answer, subject, note, difficulty } = req.body;
 
     if (!question || !answer) {
-      return sendError(res, 400, "Question and answer are required");
+      return sendError(res, 200, "Question and answer are required");
     }
 
     const flashcard = await Flashcard.create({
@@ -23,10 +23,9 @@ export const createFlashcard = async (req, res) => {
 
     return sendSuccess(res, 201, "Flashcard created successfully", flashcard);
   } catch (error) {
-    return sendError(res, 400, error.message);
+    return sendError(res, 200, error.message);
   }
 };
-
 
 /* =========================
    GET ALL FLASHCARDS (USER)
@@ -49,7 +48,7 @@ export const getAllFlashcards = async (req, res) => {
 
     return sendSuccess(res, 200, "Flashcards fetched successfully", flashcards);
   } catch (error) {
-    return sendError(res, 400, error.message);
+    return sendError(res, 200, error.message);
   }
 };
 
@@ -71,7 +70,7 @@ export const getFlashcardById = async (req, res) => {
 
     return sendSuccess(res, 200, "Flashcard fetched successfully", flashcard);
   } catch (error) {
-    return sendError(res, 400, error.message);
+    return sendError(res, 200, error.message);
   }
 };
 
@@ -92,7 +91,7 @@ export const updateFlashcard = async (req, res) => {
 
     return sendSuccess(res, 200, "Flashcard updated successfully", flashcard);
   } catch (error) {
-    return sendError(res, 400, error.message);
+    return sendError(res, 200, error.message);
   }
 };
 
@@ -116,7 +115,7 @@ export const deleteFlashcard = async (req, res) => {
 
     return sendSuccess(res, 200, "Flashcard deleted successfully");
   } catch (error) {
-    return sendError(res, 400, error.message);
+    return sendError(res, 200, error.message);
   }
 };
 
@@ -152,7 +151,7 @@ export const reviewFlashcard = async (req, res) => {
       wrongCount: flashcard.wrongCount,
     });
   } catch (error) {
-    return sendError(res, 400, error.message);
+    return sendError(res, 200, error.message);
   }
 };
 
@@ -169,6 +168,6 @@ export const getFlashcardsBySubject = async (req, res) => {
 
     return sendSuccess(res, 200, "Flashcards fetched successfully", flashcards);
   } catch (error) {
-    return sendError(res, 400, error.message);
+    return sendError(res, 200, error.message);
   }
 };
