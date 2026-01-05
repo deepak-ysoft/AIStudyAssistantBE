@@ -15,7 +15,8 @@ export const signup = async (req, res) => {
     }
 
     const result = await authService.signup(name, email, password);
-    return sendSuccess(res, 201, "User registered successfully", result);
+
+    return sendSuccess(res, 201, result);
   } catch (error) {
     return sendError(res, 200, error.message);
   }
@@ -25,19 +26,18 @@ export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    if (!email || !password) {
-      return sendError(res, 400, "Please provide email and password");
-    }
-
     const result = await authService.login(email, password);
     return sendSuccess(res, 200, "Login successful", result);
   } catch (error) {
-    // 🔥 HANDLE RESTORE CASE
     if (error.code === "ACCOUNT_DELETED") {
       return sendError(res, 403, "ACCOUNT_DELETED");
     }
 
-    return sendError(res, 401, error.message);
+    if (error.code === "EMAIL_NOT_VERIFIED") {
+      return sendError(res, 403, "EMAIL_NOT_VERIFIED");
+    }
+
+    return sendError(res, 401, "Invalid email or password");
   }
 };
 
@@ -45,7 +45,9 @@ const hashOtp = (otp) => crypto.createHash("sha256").update(otp).digest("hex");
 
 export const sendRestoreOtp = async (req, res) => {
   try {
-    const { email } = req.body;
+    let { email } = req.body;
+    email = email.toLowerCase();
+
     if (!email) return sendError(res, 400, "Email is required");
 
     const user = await UserModel.findOne({ email, isDeleted: true });
@@ -101,7 +103,9 @@ export const sendRestoreOtp = async (req, res) => {
 
 export const verifyRestoreOtp = async (req, res) => {
   try {
-    const { email, otp } = req.body;
+    let { email, otp } = req.body;
+    email = email.toLowerCase();
+
     if (!email || !otp) {
       return sendError(res, 200, "Email and OTP are required");
     }
@@ -156,7 +160,9 @@ export const getImageKitAuth = (req, res) => {
 
 export const forgotPassword = async (req, res) => {
   try {
-    const { email } = req.body;
+    let { email } = req.body;
+    email = email.toLowerCase();
+
     if (!email) return sendError(res, 400, "Email is required");
 
     const user = await UserModel.findOne({ email });
@@ -308,26 +314,37 @@ export const verifyEmail = async (req, res) => {
 
 export const resendVerificationEmail = async (req, res) => {
   try {
-    const { email } = req.body;
+    let { email } = req.body; // ✅ use let
+    if (!email) {
+      return sendError(res, 400, "Email required");
+    }
 
-    if (!email) return sendError(res, 200, "Email required");
+    email = email.toLowerCase();
 
     const user = await UserModel.findOne({ email });
 
+    // 🔒 SECURITY: don't reveal if user exists
     if (!user) {
-      return sendSuccess(res, 200, "Verification email sent if user exists");
+      return sendSuccess(
+        res,
+        200,
+        "If the email exists, a verification email has been sent"
+      );
     }
 
     if (user.isEmailVerified) {
-      return sendError(res, 200, "Email already verified");
+      return sendError(res, 400, "Email already verified");
     }
 
+    // 🔐 Generate new token
     const rawToken = crypto.randomBytes(32).toString("hex");
-    user.verificationToken = crypto
+    const hashedToken = crypto
       .createHash("sha256")
       .update(rawToken)
       .digest("hex");
 
+    user.verificationToken = hashedToken;
+    user.resetPasswordExpire = Date.now() + 24 * 60 * 60 * 1000; // ⏳ 24h
     await user.save({ validateBeforeSave: false });
 
     const verifyUrl = `${process.env.FRONTEND_URL}/auth/verify-email/${rawToken}`;
@@ -337,20 +354,22 @@ export const resendVerificationEmail = async (req, res) => {
       subject: "Verify Your Email",
       html: `
         <p>Hello ${user.name},</p>
-        <p>Please verify your email:</p>
+        <p>Please verify your email by clicking the link below:</p>
         <a href="${verifyUrl}">Verify Email</a>
+        <p>This link will expire in 24 hours.</p>
       `,
     });
 
     return sendSuccess(res, 200, "Verification email sent");
   } catch (error) {
-    return sendError(res, 200, error.message);
+    return sendError(res, 500, error.message);
   }
 };
 
 export const changeEmail = async (req, res) => {
   try {
-    const { newEmail } = req.body;
+    let { newEmail } = req.body;
+    newEmail = newEmail.toLowerCase();
 
     if (!newEmail) {
       return sendError(res, 200, "New email is required");
