@@ -20,5 +20,6 @@ router.post("/:id/summarize", authenticate, aiController.generateSummary);
 router.post("/study-plan", authenticate, aiController.generateStudyPlan);
 router.post("/solve", authenticate, aiController.solveProblem);
 router.post("/weekly-report", authenticate, aiController.generateWeeklyReport);
+router.post("/notes", authenticate, aiController.createNotesWithAI);
 
 export default router;

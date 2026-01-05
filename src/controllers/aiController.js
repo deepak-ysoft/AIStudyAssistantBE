@@ -7,6 +7,7 @@ import ChatMessage from "../models/ChatModel.js";
 import SubjectModel from "../models/SubjectModel.js";
 import { parseQuizFromAI } from "../utils/parseQuiz.js";
 import StudyPlanModel from "../models/StudyPlanModel.js";
+import NotesModel from "../models/NotesModel.js";
 
 export const chat = async (req, res) => {
   try {
@@ -230,5 +231,88 @@ export const generateWeeklyReport = async (req, res) => {
     });
   } catch (error) {
     return sendError(res, 200, error.message);
+  }
+};
+
+export const createNotesWithAI = async (req, res) => {
+  try {
+    const {
+      subjectId,
+      prompt,
+      limit = 5,
+      difficulty = "beginner",
+      regenerate = false,
+    } = req.body;
+
+    const userId = req.user.id;
+
+    if (!subjectId || !prompt) {
+      return sendError(res, 400, "Subject ID and prompt are required");
+    }
+
+    const subject = await SubjectModel.findOne({
+      _id: subjectId,
+      user: userId,
+      isDeleted: false,
+    });
+
+    if (!subject) {
+      return sendError(res, 404, "Subject not found");
+    }
+
+    // 🔁 Regenerate: soft delete existing notes of this subject
+    if (regenerate) {
+      await NotesModel.updateMany(
+        {
+          subject: subjectId,
+          user: userId,
+          isDeleted: false,
+        },
+        {
+          isDeleted: true,
+          deletedAt: new Date(),
+          deletedBy: userId,
+        }
+      );
+
+      subject.notes = [];
+      await subject.save();
+    }
+
+    // 🤖 Generate notes from AI
+    const aiNotes = await aiService.generateNotes(
+      prompt,
+      subject.name,
+      difficulty,
+      limit
+    );
+
+    const createdNotes = [];
+
+    for (const aiNote of aiNotes) {
+      const note = await NotesModel.create({
+        title: aiNote.title,
+        content: aiNote.content,
+        summary: aiNote.summary,
+        tags: aiNote.tags || [],
+        user: userId,
+        subject: subjectId,
+        fileType: "text",
+      });
+
+      subject.notes.push(note._id);
+      createdNotes.push(note);
+    }
+
+    await subject.save();
+
+    return sendSuccess(res, 201, "AI notes created successfully", {
+      count: createdNotes.length,
+      difficulty,
+      regenerate,
+      notes: createdNotes,
+    });
+  } catch (error) {
+    return sendError(res, 500, error.message);
   }
 };

@@ -1,6 +1,6 @@
 import { callGroq } from "../config/groq.js";
 
-const CHAT_MODEL = "llama-3.1-8b-instant";
+const AI_MODEL = "llama-3.1-8b-instant";
 
 const SYSTEM_PROMPT = `
 You are an AI study assistant.
@@ -31,9 +31,31 @@ Answering rules:
 - Do NOT blame the user for unclear input
 `;
 
+const SYSTEM_NOTE_PROMPT = `
+You are an AI study assistant.
+
+STRICT RULES:
+- Output ONLY valid JSON
+- Do NOT use bullet symbols (•, -, *)
+- Use "\\n" for line breaks inside strings
+- Do NOT add explanations or text outside JSON
+
+JSON format:
+{
+  "notes": [
+    {
+      "title": "string",
+      "content": "string",
+      "summary": "string",
+      "tags": ["string"]
+    }
+  ]
+}
+`;
+
 /* ---------------- SUMMARY ---------------- */
 export const generateSummary = async (noteContent) => {
-  const res = await callGroq(CHAT_MODEL, [
+  const res = await callGroq(AI_MODEL, [
     { role: "system", content: SYSTEM_PROMPT },
     {
       role: "user",
@@ -59,7 +81,7 @@ Content:
 ${noteContent}
 `;
 
-  const res = await callGroq(CHAT_MODEL, [
+  const res = await callGroq(AI_MODEL, [
     { role: "system", content: SYSTEM_PROMPT },
     { role: "user", content: prompt },
   ]);
@@ -90,7 +112,7 @@ Content:
 ${noteContent}
 `;
 
-  const res = await callGroq(CHAT_MODEL, [
+  const res = await callGroq(AI_MODEL, [
     { role: "system", content: SYSTEM_PROMPT },
     { role: "user", content: prompt },
   ]);
@@ -100,7 +122,7 @@ ${noteContent}
 
 /* ---------------- STUDY PLAN ---------------- */
 export const generateStudyPlan = async (availableHours, subjects) => {
-  const res = await callGroq(CHAT_MODEL, [
+  const res = await callGroq(AI_MODEL, [
     { role: "system", content: SYSTEM_PROMPT },
     {
       role: "user",
@@ -167,13 +189,13 @@ export const solveDoubts = async (question, history = []) => {
     },
   ];
 
-  const res = await callGroq(CHAT_MODEL, messages);
+  const res = await callGroq(AI_MODEL, messages);
   return res.choices[0].message.content;
 };
 
 /* ---------------- WEEKLY REPORT ---------------- */
 export const generateWeeklyReport = async (stats) => {
-  const res = await callGroq(CHAT_MODEL, [
+  const res = await callGroq(AI_MODEL, [
     { role: "system", content: SYSTEM_PROMPT },
     {
       role: "user",
@@ -187,4 +209,65 @@ Stats: ${JSON.stringify(stats)}`,
   ]);
 
   return res.choices[0].message.content;
+};
+
+/* ---------------- NOTE GENERATION ---------------- */
+export const generateNotes = async (
+  prompt,
+  subjectName,
+  difficulty = "beginner",
+  limit = 5
+) => {
+  const messages = [
+    { role: "system", content: SYSTEM_NOTE_PROMPT },
+    {
+      role: "user",
+      content: `
+Subject: ${subjectName}
+Topic: ${prompt}
+Difficulty: ${difficulty}
+Maximum notes: ${limit}
+`,
+    },
+  ];
+
+  const res = await callGroq(AI_MODEL, messages);
+  const raw = res.choices[0].message.content;
+
+  try {
+    const extracted = extractJSON(raw);
+
+    if (!extracted) {
+      throw new Error("No JSON found in AI response");
+    }
+
+    const sanitized = sanitizeJSON(extracted);
+    const parsed = JSON.parse(sanitized);
+
+    if (!Array.isArray(parsed.notes)) {
+      throw new Error("Invalid AI response structure");
+    }
+
+    return parsed.notes.slice(0, limit);
+  } catch (error) {
+    console.error("AI RAW RESPONSE:\n", raw);
+    throw new Error("Failed to parse AI notes");
+  }
+};
+const sanitizeJSON = (jsonString) => {
+  return jsonString
+    .replace(/[\u0000-\u001F]+/g, "") // remove control chars
+    .replace(/\n/g, "\\n") // escape newlines
+    .replace(/\r/g, "\\r")
+    .replace(/\t/g, "\\t");
+};
+const extractJSON = (text) => {
+  if (!text) return null;
+
+  const start = text.indexOf("{");
+  const end = text.lastIndexOf("}");
+
+  if (start === -1 || end === -1) return null;
+
+  return text.slice(start, end + 1);
 };
