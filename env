@@ -1,0 +1,24 @@
+NODE_ENV=development
+PORT=5000
+
+MONGODB_URI=mongodb+srv://deepaksysoft:2msdRRbp1o6Vx3L2@deepakcluster.u8653ge.mongodb.net/ai-study-assistant
+
+JWT_SECRET=your_jwt_secret_key_change_in_production
+JWT_EXPIRE=7d
+
+SMTP_HOST=mail.ysoftsolution.com
+SMTP_PORT=8889
+SMTP_USER=inquiry@ysoftsolution.com
+SMTP_PASS=Inquiry@120
+
+FRONTEND_URL=http://localhost:5101
+CORS_ORIGIN=http://localhost:5101
+RESET_TOKEN_EXPIRE_MINUTES=15
+
+# GEMINI_API_KEY=AIzaSyD4DDW9_T_G4ctJCGo7u2AW7OFTDO85kck
+# HF_API_KEY=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
+GROQ_API_KEY=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
+
+IMAGEKIT_PUBLIC_KEY=public_J2m5Y5Jw8wYJw8wN708zjNWzI/Q=
+IMAGEKIT_PRIVATE_KEY=private_IsoX35mQ1hCXyAS7RIDWbIZT/hY=
+IMAGEKIT_URL_ENDPOINT=https://ik.imagekit.io/AI_Assistant/
